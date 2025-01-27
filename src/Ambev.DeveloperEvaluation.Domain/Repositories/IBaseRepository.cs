@@ -1,5 +1,7 @@
 using Ambev.DeveloperEvaluation.Domain.Entities;
 
+using System.Linq.Expressions;
+
 namespace Ambev.DeveloperEvaluation.Domain.Repositories;
 
 /// <summary>
@@ -31,4 +33,10 @@ public interface IBaseRepository<T, TID>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if the user was deleted, false if not found</returns>
     Task<bool> DeleteAsync(TID id, CancellationToken cancellationToken = default);
+
+    Expression<Func<T, bool>> BuildInFilter<TValue>(string propertyName, IEnumerable<TValue> values);
+
+    Expression<Func<T, bool>> BuildComparisonFilter(string propertyName, string comparisonOperator, object value);
+
+    Expression<Func<T, bool>> CombineFilters(IEnumerable<Expression<Func<T, bool>>> filters, bool useAndOperator = true);
 }

@@ -1,10 +1,10 @@
-﻿namespace Ambev.DeveloperEvaluation.WebApi.Features.Products.CreateProduct;
+﻿namespace Ambev.DeveloperEvaluation.WebApi.Features.Products.GetProducts;
 
 
 /// <summary>
 /// Represents a product with details such as title, price, description, category, image, and rating.
 /// </summary>
-public class CreateProductResponse
+public class GetProductsResponse
 {
     /// <summary>
     /// Gets or sets the unique identifier of the product.
@@ -39,5 +39,5 @@ public class CreateProductResponse
     /// <summary>
     /// Gets or sets the rating of the product.
     /// </summary>
-    public CreateProductRating? Rating { get; set; }
+    public GetProductsRating? Rating { get; set; }
 }

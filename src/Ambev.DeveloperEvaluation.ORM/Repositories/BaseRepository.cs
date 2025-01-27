@@ -1,5 +1,7 @@
 ﻿using Ambev.DeveloperEvaluation.Domain.Repositories;
 
+using System.Linq.Expressions;
+
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
 
 /// <summary>
@@ -57,5 +59,104 @@ public class BaseRepository<T, TID> : IBaseRepository<T, TID> where T : class
         _context.Set<T>().Remove(record);
         await _context.SaveChangesAsync(cancellationToken);
         return true;
+    }
+
+    /// <summary>
+    /// Builds a filter for multiple values (IN clause).
+    /// </summary>
+    /// <param name="propertyName">The property name.</param>
+    /// <param name="values">The list of values to filter by.</param>
+    /// <returns>A filter expression.</returns>
+    public Expression<Func<T, bool>> BuildInFilter<TValue>(string propertyName, IEnumerable<TValue> values)
+    {
+        if (values == null || !values.Any())
+            return null;
+
+        var parameter = Expression.Parameter(typeof(T), "x");
+        var property = Expression.Property(parameter, propertyName);
+
+        // Create a list of constant expressions for each value
+        var valueConstants = values.Select(value => Expression.Constant(value, property.Type));
+
+        // Build OR expressions for each value
+        var body = valueConstants
+            .Select(value => Expression.Equal(property, value))
+            .Aggregate(Expression.OrElse);
+
+        return Expression.Lambda<Func<T, bool>>(body, parameter);
+    }
+
+    /// <summary>
+    /// Builds a comparison filter (e.g., ==, >, <).
+    /// </summary>
+    /// <param name="propertyName">The property to compare.</param>
+    /// <param name="comparisonOperator">Comparison operator (e.g., "==", ">", "<").</param>
+    /// <param name="value">The value to compare.</param>
+    /// <returns>A filter expression.</returns>
+    public Expression<Func<T, bool>> BuildComparisonFilter(string propertyName, string comparisonOperator, object value)
+    {
+        var parameter = Expression.Parameter(typeof(T), "x");
+        var property = Expression.Property(parameter, propertyName);
+
+        // Handle nullability for value types
+        var constant = Expression.Constant(value, property.Type);
+
+        // Build comparison
+        Expression comparison = comparisonOperator switch
+        {
+            "==" => Expression.Equal(property, constant),
+            ">" => Expression.GreaterThan(property, constant),
+            "<" => Expression.LessThan(property, constant),
+            ">=" => Expression.GreaterThanOrEqual(property, constant),
+            "<=" => Expression.LessThanOrEqual(property, constant),
+            _ => throw new ArgumentException("Invalid comparison operator.")
+        };
+
+        return Expression.Lambda<Func<T, bool>>(comparison, parameter);
+    }
+
+    /// <summary>
+    /// Combines multiple filters using logical operators (AND/OR).
+    /// </summary>
+    /// <param name="filters">List of individual filters.</param>
+    /// <param name="useAndOperator">True for AND logic, False for OR logic.</param>
+    /// <returns>A combined filter expression.</returns>
+    public Expression<Func<T, bool>> CombineFilters(IEnumerable<Expression<Func<T, bool>>> filters, bool useAndOperator = true)
+    {
+        if (filters == null || !filters.Any())
+        {
+            return null;
+        }
+
+        var parameter = Expression.Parameter(typeof(T), "x");
+
+        // Combine expressions
+        var combined = filters
+            .Select(filter => ReplaceParameter(filter.Body, filter.Parameters[0], parameter))
+            .Aggregate((left, right) => useAndOperator ? Expression.AndAlso(left, right) : Expression.OrElse(left, right));
+
+        return Expression.Lambda<Func<T, bool>>(combined, parameter);
+    }
+
+    private Expression ReplaceParameter(Expression expression, ParameterExpression oldParameter, ParameterExpression newParameter)
+    {
+        return new ParameterReplacer(oldParameter, newParameter).Visit(expression);
+    }
+
+    private class ParameterReplacer : ExpressionVisitor
+    {
+        private readonly ParameterExpression _oldParameter;
+        private readonly ParameterExpression _newParameter;
+
+        public ParameterReplacer(ParameterExpression oldParameter, ParameterExpression newParameter)
+        {
+            _oldParameter = oldParameter;
+            _newParameter = newParameter;
+        }
+
+        protected override Expression VisitParameter(ParameterExpression node)
+        {
+            return node == _oldParameter ? _newParameter : base.VisitParameter(node);
+        }
     }
 }

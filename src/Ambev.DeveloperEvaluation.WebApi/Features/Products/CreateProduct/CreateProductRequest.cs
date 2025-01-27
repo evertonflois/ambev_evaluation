@@ -34,5 +34,5 @@ public class CreateProductRequest
     /// <summary>
     /// Gets or sets the rating of the product.
     /// </summary>
-    public Rating? Rating { get; set; }
+    public CreateProductRating? Rating { get; set; }
 }

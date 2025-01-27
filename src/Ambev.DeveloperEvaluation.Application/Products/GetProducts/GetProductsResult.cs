@@ -1,14 +1,16 @@
-﻿namespace Ambev.DeveloperEvaluation.WebApi.Features.Products.CreateProduct;
+﻿using Ambev.DeveloperEvaluation.Domain.Entities;
 
+namespace Ambev.DeveloperEvaluation.Application.Products.GetProducts;
 
 /// <summary>
-/// Represents a product with details such as title, price, description, category, image, and rating.
+/// Represents the response of products request.
 /// </summary>
-public class CreateProductResponse
+public class GetProductsResult
 {
     /// <summary>
-    /// Gets or sets the unique identifier of the product.
+    /// Gets or sets the unique identifier of the newly created product.
     /// </summary>
+    /// <value>A GUID that uniquely identifies the created product in the system.</value>
     public int Id { get; set; }
 
     /// <summary>
@@ -39,5 +41,5 @@ public class CreateProductResponse
     /// <summary>
     /// Gets or sets the rating of the product.
     /// </summary>
-    public CreateProductRating? Rating { get; set; }
+    public ProductRating? Rating { get; set; }
 }

@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents a rating with a score and a count of reviews.
 /// </summary>
-public class Rating
+public class CreateProductRating
 {
     /// <summary>
     /// Gets or sets the average rating score of the product.

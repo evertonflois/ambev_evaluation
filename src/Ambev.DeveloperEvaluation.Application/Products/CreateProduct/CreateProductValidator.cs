@@ -8,7 +8,7 @@ namespace Ambev.DeveloperEvaluation.Application.Products.CreateProduct;
 public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
 {
     /// <summary>
-    /// Initializes a new instance of the CreateUserCommandValidator with defined validation rules.
+    /// Initializes a new instance of the CreateProductCommandValidator with defined validation rules.
     /// </summary>
     /// <remarks>
     /// Validation rules include:
