@@ -24,7 +24,8 @@ public interface IBaseRepository<T, TID>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The user if found, null otherwise</returns>
     Task<T?> GetByIdAsync(TID id, CancellationToken cancellationToken = default);
-    
+
+    Task<T> UpdateAsync(T entity, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a record from the repository

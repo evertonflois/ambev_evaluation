@@ -2,6 +2,7 @@
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 
 using Microsoft.EntityFrameworkCore;
+
 using System.Linq.Expressions;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
@@ -20,6 +21,17 @@ public class ProductRepository : BaseRepository<Product, int>, IProductRepositor
     public ProductRepository(DefaultContext context) : base(context)
     {
         _context = context;
+    }
+
+    public override async Task<Product?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {        
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+
+        await _context.Entry(product)
+            .Reference("Rating")
+            .LoadAsync();
+
+        return product;
     }
 
     /// <summary>
@@ -64,7 +76,4 @@ public class ProductRepository : BaseRepository<Product, int>, IProductRepositor
 
         return (items, totalCount);
     }
-
-
-
 }

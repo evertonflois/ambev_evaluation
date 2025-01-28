@@ -23,4 +23,10 @@ public interface IOrder
     /// Each product contains product details and quantity.
     /// </summary>
     public List<OrderItem> Products { get; set; }
+
+    public OrderCustomer Customer { get; set; }
+
+    public string SaleBranch { get; set; }
+
+    public bool Cancelled { get; set; }
 }

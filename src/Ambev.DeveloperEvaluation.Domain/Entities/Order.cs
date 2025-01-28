@@ -5,7 +5,7 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities;
 
 public class Order : IOrder
 {
-    public new int Id { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// Gets or sets the unique identifier for the user placing the order.
@@ -23,4 +23,10 @@ public class Order : IOrder
     /// Each product contains product details and quantity.
     /// </summary>
     public List<OrderItem> Products { get; set; } = [];
+
+    public OrderCustomer Customer { get; set; } = new() { };
+
+    public string SaleBranch { get; set; } = string.Empty;
+    
+    public bool Cancelled { get; set; } = false;
 }

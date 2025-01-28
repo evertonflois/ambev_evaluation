@@ -11,4 +11,10 @@ public interface IOrderItem
     /// Gets or sets the quantity of the product in the order.
     /// </summary>
     public int Quantity { get; set; }
+
+    public double UnitPrice { get; set; }
+
+    public double Discount { get; set; }
+
+    public double Amount { get; set; }
 }

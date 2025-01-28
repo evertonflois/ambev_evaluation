@@ -1,5 +1,7 @@
 ﻿using Ambev.DeveloperEvaluation.Domain.Repositories;
 
+using Microsoft.EntityFrameworkCore;
+
 using System.Linq.Expressions;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
@@ -26,7 +28,7 @@ public class BaseRepository<T, TID> : IBaseRepository<T, TID> where T : class
     /// <param name="entity">The record to create</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The created record</returns>
-    public async Task<T> CreateAsync(T entity, CancellationToken cancellationToken = default)
+    public virtual async Task<T> CreateAsync(T entity, CancellationToken cancellationToken = default)
     {        
         await _context.Set<T>().AddAsync(entity, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
@@ -39,9 +41,23 @@ public class BaseRepository<T, TID> : IBaseRepository<T, TID> where T : class
     /// <param name="id">The unique identifier of the record</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The record if found, null otherwise</returns>
-    public async Task<T?> GetByIdAsync(TID id, CancellationToken cancellationToken = default)
+    public virtual async Task<T?> GetByIdAsync(TID id, CancellationToken cancellationToken = default)
     {
         return await _context.Set<T>().FindAsync([id], cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Updates a record in the database
+    /// </summary>
+    /// <param name="entity">The record to update</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The updated record</returns>
+    public virtual async Task<T> UpdateAsync(T entity, CancellationToken cancellationToken = default)
+    {
+        _context.Set<T>().Attach(entity);
+        _context.Entry(entity).State = EntityState.Modified;
+        await _context.SaveChangesAsync(cancellationToken);
+        return entity;
     }
 
     /// <summary>
@@ -50,7 +66,7 @@ public class BaseRepository<T, TID> : IBaseRepository<T, TID> where T : class
     /// <param name="id">The unique identifier of the record to delete</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if the record was deleted, false if not found</returns>
-    public async Task<bool> DeleteAsync(TID id, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> DeleteAsync(TID id, CancellationToken cancellationToken = default)
     {
         var record = await GetByIdAsync(id, cancellationToken);
         if (record == null)
@@ -67,7 +83,7 @@ public class BaseRepository<T, TID> : IBaseRepository<T, TID> where T : class
     /// <param name="propertyName">The property name.</param>
     /// <param name="values">The list of values to filter by.</param>
     /// <returns>A filter expression.</returns>
-    public Expression<Func<T, bool>> BuildInFilter<TValue>(string propertyName, IEnumerable<TValue> values)
+    public virtual Expression<Func<T, bool>> BuildInFilter<TValue>(string propertyName, IEnumerable<TValue> values)
     {
         if (values == null || !values.Any())
             return null;
@@ -93,7 +109,7 @@ public class BaseRepository<T, TID> : IBaseRepository<T, TID> where T : class
     /// <param name="comparisonOperator">Comparison operator (e.g., "==", ">", "<").</param>
     /// <param name="value">The value to compare.</param>
     /// <returns>A filter expression.</returns>
-    public Expression<Func<T, bool>> BuildComparisonFilter(string propertyName, string comparisonOperator, object value)
+    public virtual Expression<Func<T, bool>> BuildComparisonFilter(string propertyName, string comparisonOperator, object value)
     {
         var parameter = Expression.Parameter(typeof(T), "x");
         var property = Expression.Property(parameter, propertyName);
@@ -121,7 +137,7 @@ public class BaseRepository<T, TID> : IBaseRepository<T, TID> where T : class
     /// <param name="filters">List of individual filters.</param>
     /// <param name="useAndOperator">True for AND logic, False for OR logic.</param>
     /// <returns>A combined filter expression.</returns>
-    public Expression<Func<T, bool>> CombineFilters(IEnumerable<Expression<Func<T, bool>>> filters, bool useAndOperator = true)
+    public virtual Expression<Func<T, bool>> CombineFilters(IEnumerable<Expression<Func<T, bool>>> filters, bool useAndOperator = true)
     {
         if (filters == null || !filters.Any())
         {

@@ -2,6 +2,9 @@
 
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
+
+using System.Linq.Expressions;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
 
@@ -16,15 +19,27 @@ public class BaseMongoDBRepository<T> : IBaseMongoDBRepository<T>
         _context = context;
     }
 
-    public async Task<T> GetByIdAsync(string id)
+    public async Task<T> GetByIdAsync(Expression<Func<T, bool>> key)
     {
-        //return await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
-        throw new NotImplementedException();
+        return await _collection.Find(key).FirstOrDefaultAsync();
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync()
+    public async Task<(IEnumerable<T> Items, int TotalCount)> GetAllAsync(int pageNumber, int pageSize, IEnumerable<Expression<Func<T, bool>>> filters)
     {
-        return await _collection.Find(_ => true).ToListAsync();
+        var query = _collection.AsQueryable();
+
+        foreach (var filter in filters)
+        {
+            query = query.Where(filter);
+        }
+
+        // Get total count
+        var totalCount = await query.CountAsync();
+
+        return (await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(), totalCount);
     }
 
     public async Task<T> CreateAsync(T entity)
@@ -33,16 +48,14 @@ public class BaseMongoDBRepository<T> : IBaseMongoDBRepository<T>
         return entity;
     }
 
-    public async Task UpdateAsync(T entity)
+    public async Task<bool> UpdateAsync(Expression<Func<T, bool>> key, T entity)
     {
-        //await _collection.ReplaceOneAsync(x => x.Id == ((dynamic)entity).Id, entity);
-        throw new NotImplementedException();
+        return (await _collection.ReplaceOneAsync(key, entity)).ModifiedCount > 0;        
     }
 
-    public async Task DeleteAsync(string id)
+    public async Task<bool> DeleteAsync(Expression<Func<T, bool>> key)
     {
-        //await _collection.DeleteOneAsync(x => x.Id == id);
-        throw new NotImplementedException();
+        return (await _collection.DeleteOneAsync(key)).DeletedCount > 0;
     }
 
     public async Task<int> GetNextSequence(string counterName)

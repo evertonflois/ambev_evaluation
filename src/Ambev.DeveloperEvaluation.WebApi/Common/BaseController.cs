@@ -14,7 +14,7 @@ public class BaseController : ControllerBase
         User.FindFirst(ClaimTypes.Email)?.Value ?? throw new NullReferenceException();
 
     protected IActionResult Ok<T>(T data) =>
-            base.Ok(new ApiResponseWithData<T> { Data = data, Success = true });
+            base.Ok(data); //base.Ok(new ApiResponseWithData<T> { Data = data, Success = true });
 
     protected IActionResult Created<T>(string routeName, object routeValues, T data) =>
         base.CreatedAtRoute(routeName, routeValues, new ApiResponseWithData<T> { Data = data, Success = true });
@@ -26,7 +26,7 @@ public class BaseController : ControllerBase
         base.NotFound(new ApiResponse { Message = message, Success = false });
 
     protected IActionResult OkPaginated<T>(PaginatedList<T> pagedList) =>
-            base.Ok(new PaginatedResponse<T>
+            Ok(new PaginatedResponse<T>
             {
                 Data = pagedList,
                 CurrentPage = pagedList.CurrentPage,
